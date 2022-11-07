@@ -1,0 +1,29 @@
+From b7f16bbdcfb1feb8aec5e64be78e6b5578ce944f Mon Sep 17 00:00:00 2001
+From: SakuraNotStupid <sakurakyuo@protonmail.com>
+Date: Sat, 12 Nov 2022 21:24:52 +0000
+Subject: [PATCH] kernel: cgroup: use uid_eq instead of binary operator
+
+Change-Id: I95d272e8541c51893aea294207c02908b333a600
+Signed-off-by: SakuraNotStupid <sakurakyuo@protonmail.com>
+---
+ kernel/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 00eb7bfd..b5f2558d 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2135,8 +2135,8 @@ int subsys_cgroup_allow_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
+ 	cgroup_taskset_for_each(task, cgrp, tset) {
+ 		tcred = __task_cred(task);
+ 
+-		if (current != task && cred->euid != tcred->uid &&
+-		    cred->euid != tcred->suid)
++		if (current != task && !uid_eq(cred->euid, tcred->uid) &&
++		    !uid_eq(cred->euid, tcred->suid))
+ 			return -EACCES;
+ 	}
+ 
+-- 
+2.38.1
+

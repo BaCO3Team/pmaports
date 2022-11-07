@@ -1,0 +1,36 @@
+From 121a1f13227a6b529b1d2768dd5c002d9da22243 Mon Sep 17 00:00:00 2001
+From: Iskren Chernev <me@iskren.info>
+Date: Sat, 20 Feb 2021 00:49:45 +0200
+Subject: [PATCH] Remove gcc python wrapper
+
+---
+ Makefile | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 72f14a0b950..3da5a251be2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -326,7 +326,7 @@ include $(srctree)/scripts/Kbuild.include
+ 
+ AS		= $(CROSS_COMPILE)as
+ LD		= $(CROSS_COMPILE)ld
+-REAL_CC		= $(CROSS_COMPILE)gcc
++CC		= $(CROSS_COMPILE)gcc
+ CPP		= $(CC) -E
+ AR		= $(CROSS_COMPILE)ar
+ NM		= $(CROSS_COMPILE)nm
+@@ -340,10 +340,6 @@ DEPMOD		= /sbin/depmod
+ PERL		= perl
+ CHECK		= sparse
+ 
+-# Use the wrapper for the compiler.  This wrapper scans for new
+-# warnings and causes the build to stop upon encountering them.
+-CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
+-
+ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
+ 		  -Wbitwise -Wno-return-void $(CF)
+ CFLAGS_MODULE   =
+-- 
+2.38.1
+

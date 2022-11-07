@@ -1,0 +1,27 @@
+From 2d1916957863fc4316d049cbd781a4f73d64c739 Mon Sep 17 00:00:00 2001
+From: SakuraNotStupid <sakurakyuo@protonmail.com>
+Date: Sun, 13 Nov 2022 00:15:00 +0000
+Subject: [PATCH] ANDROID: SEC_TIMEOUT_LOW_MEMORY_KILLER should depend on
+ ANDROID_LOW_MEMORY_KILLER
+
+Change-Id: I6286cf629a26b84c2cc9532d34bf4678a55f8dd4
+Signed-off-by: SakuraNotStupid <sakurakyuo@protonmail.com>
+---
+ drivers/staging/android/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/android/Kconfig b/drivers/staging/android/Kconfig
+index 35455822..032631bd 100644
+--- a/drivers/staging/android/Kconfig
++++ b/drivers/staging/android/Kconfig
+@@ -71,6 +71,7 @@ config ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
+ 
+ config SEC_TIMEOUT_LOW_MEMORY_KILLER
+ 	bool "Android timeout Low Memory Killer"
++	depends on ANDROID_LOW_MEMORY_KILLER
+ 	default n
+ 	help
+ 	 This enables 'Android-Style oom-killer'
+-- 
+2.38.1
+

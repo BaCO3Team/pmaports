@@ -1,0 +1,92 @@
+# Reference: <https://postmarketos.org/vendorkernel>
+# Kernel config based on: arch/arm64/configs/msm8976_sec_c9lte_chn_defconfig
+
+pkgname=linux-samsung-c9ltechn
+pkgver=3.10.108
+pkgrel=0
+pkgdesc="Samsung Galaxy C9 Pro (China variant) kernel fork"
+arch="aarch64"
+_carch="arm64"
+_flavor="samsung-c9ltechn"
+url="https://kernel.org"
+license="GPL-2.0-only"
+options="!strip !check !tracedeps pmb:cross-native"
+makedepends="
+	bash
+	bc
+	bison
+	devicepkg-dev
+	dtbtool
+	flex
+	openssl-dev
+	perl
+	linux-headers
+	gcc4
+"
+
+# Compiler: GCC 4 (doesn't compile with newer versions)
+if [ "${CC:0:5}" != "gcc4-" ]; then
+	CC="gcc4-$CC"
+	HOSTCC="gcc4-gcc"
+	CROSS_COMPILE="gcc4-$CROSS_COMPILE"
+fi
+
+# Source
+_repository="android_kernel_samsung_msm8976"
+_commit="9524c61d255ac5a9e76b84a43cb59928c62b9a6e"
+_config="config-$_flavor.$arch"
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/Galaxy-C9-Pro/$_repository/archive/$_commit.tar.gz
+	$_config
+	gcc10-extern_YYLOC_global_declaration.patch
+	0001-Remove-gcc-python-wrapper.patch
+	0001-fs-posix_acl-remove-duplicated-functions.patch
+	fix_mdp_ctrl_off.patch
+	0001-mdss-panel-to-fb-var.patch
+	0001-ANDROID-SEC_TIMEOUT_LOW_MEMORY_KILLER-should-depend-.patch
+	0001-kernel-cgroup-use-uid_eq-instead-of-binary-operator.patch
+	0001-treewide-fix-build-err-on-newer-ver.patch		
+"
+builddir="$srcdir/$_repository-$_commit"
+_outdir="out"
+
+prepare() {
+	default_prepare
+	. downstreamkernel_prepare
+}
+
+build() {
+	unset LDFLAGS
+	make O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS"
+
+	# Master DTB (deviceinfo_bootimg_qcdt)
+	dtbTool -o "$_outdir/arch/$_carch/boot"/dt.img \
+		"$_outdir/arch/$_carch/boot/" --version=3
+}
+
+package() {
+	KERNEL_IMAGE_NAME="Image.gz"  downstreamkernel_package \
+	    "$builddir" "$pkgdir" "$_carch" "$_flavor" "$_outdir"
+
+	install -Dm644 "$_outdir/arch/$_carch/boot"/dt.img \
+			"$pkgdir"/boot/dt.img
+
+	unset LDFLAGS
+	make O="$_outdir" \
+		ARCH="$_carch" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS" \
+		INSTALL_MOD_STRIP=1 \
+		INSTALL_MOD_PATH="$pkgdir" \
+		modules_install
+}
+
+sha512sums="
+1f4eff7fb985fda7fa53e24c6c55f6970e26a3820e0bda4aba616289483a821c2cd4b9ba0ef251dbc909ffd960cae14f592c853ac0c00c1db8329109dfc0b6f3  linux-samsung-c9ltechn-9524c61d255ac5a9e76b84a43cb59928c62b9a6e.tar.gz
+ac3adba4c6a81b2877f76c3545b3eb4012622b78710c29bb7d4ab61ae5d31e85066d5434dcc9fddd71520ce9658a4b94ed2d8fb5d2f2fca84e925c09c5164de7  config-samsung-c9ltechn.aarch64
+2b48f1bf0e3f70703d2cdafc47d5e615cc7c56c70bec56b2e3297d3fa4a7a1321d649a8679614553dde8fe52ff1051dae38d5990e3744c9ca986d92187dcdbeb  gcc10-extern_YYLOC_global_declaration.patch
+cb2da586f173e2e5a37eb640ec52823d75e1547a8d9fbe5dd317f3853a671dc71babe9a880ffb7f87eb928edcc00ce1ed725bf836023076f93fc33b5aa2ba6e9  0001-Remove-gcc-python-wrapper.patch
+8d5f01c789b0f6307c70147a2937367d965234bb4af15da3b3f802e41e921f704866302d2ef742373def0e56d054724b786e4c5d0e96e9d7af05ea6f74eea9ac  0001-fs-posix_acl-remove-duplicated-functions.patch
+3ccfaf591befba3b67d24134a516352173767cac0479d3011f077866e02a792f3581e50d05110375a8f84876213823d37d3791c4cb82f19f212bc4bee57934c8  fix_mdp_ctrl_off.patch
+2ce5374fb201f23502c95978b99bf6bc19193a3563a16faf995a67ca5240a09b3879dcd2a49772eab1630663607ab1ee584a70a9d9b1603aa25a4359f7621337  0001-mdss-panel-to-fb-var.patch
+"

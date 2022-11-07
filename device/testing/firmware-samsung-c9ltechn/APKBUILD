@@ -1,0 +1,20 @@
+pkgname=firmware-samsung-c9ltechn
+pkgver=0.1
+pkgrel=0
+_commit_fw="91cf2005a969106f4b178fce303735178414f947"
+pkgdesc="Firmware files for Samsung Galaxy C9 Pro (China variant)"
+url="https://github.com/Galaxy-C9-Pro/android_vendor_samsung_c9lte-common.git"
+arch="aarch64"
+license="proprietary"
+source="$pkgname-$_commit_fw-fw.tar.gz::https://github.com/BaCO3Team/firmware-samsung-c9ltechn/archive/$_commit_fw.tar.gz"
+options="!check !archcheck !strip !spdx !tracedeps pmb:cross-native"
+builddir="$srcdir/firmware-samsung-c9ltechn-$_commit_fw"
+
+package() {
+	install -Dm644 ram_patch.fw \
+		"$pkgdir"/lib/firmware/postmarketos/ram_patch.fw
+}
+
+sha512sums="
+cef87e61db9328bf02a154e7fbdfc16437b276ced64217d84cb51f2dc59e12b8795dce79d7736de659dc77f055684f1f113d57649f9d5c69bd74ef97e0f16e76  firmware-samsung-c9ltechn-91cf2005a969106f4b178fce303735178414f947-fw.tar.gz
+"

@@ -1,0 +1,80 @@
+From fe5131b250c373d152b7e73895f17846d1f1e6bd Mon Sep 17 00:00:00 2001
+From: Ion Agorria <ion@agorria.com>
+Date: Thu, 24 Jan 2019 18:52:58 +0100
+Subject: [PATCH] mdss: update fb mode at mdss_panelinfo_to_fb_var to fix Xorg
+
+When mdss_panelinfo_to_fb_var is called at
+screen unblank it updates the values in fb_info->var,
+meanwhile the fb_info->mode and modelist remain with old
+values set at registering the fb causing mismatch when
+Xorg attempts to set mode.
+
+Signed-off-by: Ookiineko <chiisaineko@protonmail.com>
+---
+ drivers/video/msm/mdss/mdss_fb.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/video/msm/mdss/mdss_fb.c b/drivers/video/msm/mdss/mdss_fb.c
+index d2365be6770..9b105090db2 100644
+--- a/drivers/video/msm/mdss/mdss_fb.c
++++ b/drivers/video/msm/mdss/mdss_fb.c
+@@ -114,8 +114,7 @@ static int mdss_fb_send_panel_event(struct msm_fb_data_type *mfd,
+ 					int event, void *arg);
+ static void mdss_fb_set_mdp_sync_pt_threshold(struct msm_fb_data_type *mfd,
+ 		int type);
+-static void mdss_panelinfo_to_fb_var(struct mdss_panel_info *pinfo,
+-					struct fb_var_screeninfo *var);
++static void mdss_panelinfo_to_fb_var(struct msm_fb_data_type *mfd);
+ 
+ static int lcd_backlight_registered;
+ 
+@@ -1519,7 +1518,7 @@ static void mdss_panel_validate_debugfs_info(struct msm_fb_data_type *mfd)
+ 		if (is_panel_split(mfd) && pdata->next)
+ 			mdss_fb_validate_split(pdata->panel_info.xres,
+ 					pdata->next->panel_info.xres, mfd);
+-		mdss_panelinfo_to_fb_var(panel_info, var);
++		mdss_panelinfo_to_fb_var(mfd);
+ 		if (mdss_fb_send_panel_event(mfd, MDSS_EVENT_CHECK_PARAMS,
+ 							panel_info))
+ 			pr_err("Failed to send panel event CHECK_PARAMS\n");
+@@ -2366,7 +2365,7 @@ static int mdss_fb_register(struct msm_fb_data_type *mfd)
+ 		return ret;
+ 	}
+ 
+-	mdss_panelinfo_to_fb_var(panel_info, var);
++	mdss_panelinfo_to_fb_var(mfd);
+ 	
+ 	fix->type = panel_info->is_3d_panel;
+ 	if (mfd->mdp.fb_stride)
+@@ -3176,9 +3175,13 @@ static void mdss_fb_var_to_panelinfo(struct fb_var_screeninfo *var,
+ 		pinfo->clk_rate = PICOS2KHZ(var->pixclock) * 1000;
+ }
+ 
+-static void mdss_panelinfo_to_fb_var(struct mdss_panel_info *pinfo,
+-						struct fb_var_screeninfo *var)
++static void mdss_panelinfo_to_fb_var(struct msm_fb_data_type *mfd)
+ {
++    if (!mfd)
++        return -EINVAL;
++    struct mdss_panel_info *pinfo = mfd->panel_info;
++    struct fb_info *fbi = mfd->fbi;
++    struct fb_var_screeninfo *var = &fbi->var;
+ 	u32 frame_rate;
+ 	struct mdss_panel_data *pdata = container_of(pinfo,
+ 				struct mdss_panel_data, panel_info);
+@@ -3211,6 +3214,12 @@ static void mdss_panelinfo_to_fb_var(struct mdss_panel_info *pinfo,
+ 		var->width = pinfo->physical_width;
+ 	if (pinfo->physical_height)
+ 		var->height = pinfo->physical_height;
++
++    //Hack to update current fbi->mode according to fbi->var when var is updated from panel info
++    if (fbi->mode) {
++        printk("Updating mdss fb mode from fb var\n");
++        fb_var_to_videomode(fbi->mode, var);
++    }
+ }
+ 
+ /**
+-- 
+2.38.1
+

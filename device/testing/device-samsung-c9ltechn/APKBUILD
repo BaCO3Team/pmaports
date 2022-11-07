@@ -1,0 +1,36 @@
+# Reference: <https://postmarketos.org/devicepkg>
+pkgname=device-samsung-c9ltechn
+pkgdesc="Samsung Galaxy C9 Pro (China variant)"
+pkgver=0.1
+pkgrel=0
+url="https://postmarketos.org"
+license="MIT"
+arch="aarch64"
+options="!check !archcheck"
+depends="
+	linux-samsung-c9ltechn
+	mdss-fb-init-hack
+	mkbootimg
+	postmarketos-base
+"
+makedepends="devicepkg-dev"
+subpackages="$pkgname-nonfree-firmware:nonfree_firmware"
+source="deviceinfo"
+
+build() {
+	devicepkg_build $startdir $pkgname
+}
+
+package() {
+	devicepkg_package $startdir $pkgname
+}
+
+nonfree_firmware() {
+	pkgdesc="Firmware files for Samsung Galaxy C9 Pro (China variant)"
+	depends="firmware-samsung-c9ltechn"
+	mkdir "$subpkgdir"
+}
+
+sha512sums="
+7074d55be9f6595a82d27768848f1fadab75d8b4d459881fbd47cc0caaf0972abd60b9806d635b31ded070bd996fad93cb96688578a10cedbbb927f7d301592c  deviceinfo
+"
