@@ -1,0 +1,74 @@
+# Reference: <https://postmarketos.org/vendorkernel>
+# Kernel config based on: arch/arm64/configs/sirius_defconfig
+
+pkgname=linux-xiaomi-sirius
+pkgver=4.9.276
+pkgrel=0
+pkgdesc="Xiaomi MI 8 SE kernel fork"
+arch="aarch64"
+_carch="arm64"
+_flavor="xiaomi-sirius"
+url="https://kernel.org"
+license="GPL-2.0-only"
+options="!strip !check !tracedeps pmb:cross-native"
+makedepends="
+	android-mkdtboimg
+	bash
+	bc
+	bison
+	devicepkg-dev
+	flex
+	openssl-dev
+	perl
+	gcc4
+	gcc4-armv7
+	clang
+"
+
+# Compiler Clang + GCC 4
+CC="clang"
+HOSTCC="clang"
+if [ "${CROSS_COMPILE:0:5}" != "gcc4-" ]; then
+	CROSS_COMPILE="gcc4-$CROSS_COMPILE"
+fi
+
+
+# Source
+_repository="android_kernel_xiaomi_sdm710"
+_commit="9a70b7969bc8b11280fbbd8582d2f7112244ae8f"
+_config="config-$_flavor.$arch"
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/crdroidandroid/$_repository/archive/$_commit.tar.gz
+	$_config
+	fix-vmlinux-linking.patch
+	power_key_panic_trigger.patch
+"
+builddir="$srcdir/$_repository-$_commit"
+_outdir="out"
+
+prepare() {
+	default_prepare
+	. downstreamkernel_prepare
+}
+
+build() {
+	unset LDFLAGS
+	make O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS"
+}
+
+package() {
+	downstreamkernel_package "$builddir" "$pkgdir" "$_carch" \
+		"$_flavor" "$_outdir"
+
+	dtbodir="$builddir/$_outdir/arch/arm64/boot/dts/qcom"
+	mkdtimg create "$pkgdir/boot/dtbo.img" \
+		"$dtbodir/sirius-sdm710-overlay.dtbo"
+}
+
+sha512sums="
+2475cc289cb16a93ce0c9d9b088f50cada10a5a7e75d7c6daf8edd1a25a25d03685d3ffea7045f4509451da083133df752d0dbe30a9a25a9bf6406b7f0f8ed47  linux-xiaomi-sirius-9a70b7969bc8b11280fbbd8582d2f7112244ae8f.tar.gz
+d797ccc85e4de05bcdc92a0bdfe872a279bb6494d10d9f088cf465b2e2acac21986000fc9aa006cbb0fdfccb4cad311914373579b329a12c59ea15e6a19b17cb  config-xiaomi-sirius.aarch64
+d1549e026e6d57ae47e4435b6a1ad66bdfe0ddfa59811474de6d3a4a6a5993746f1152525302066c1f8f12e212d22d681d3d69d06309668c1a67685d095f4469  fix-vmlinux-linking.patch
+feb8af4f9e3d6ab624acc71375cfafd0e7588fc942a189a1b526a25c7f61b0ed3acb6d4ff7b0740490237d05df8344e0f2658dafd4d7ea9bb8be9221cfff3b84  power_key_panic_trigger.patch
+"

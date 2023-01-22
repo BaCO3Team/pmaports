@@ -1,0 +1,28 @@
+# Reference: <https://postmarketos.org/devicepkg>
+pkgname=device-xiaomi-sirius
+pkgdesc="Xiaomi MI 8 SE"
+pkgver=0.1
+pkgrel=0
+url="https://postmarketos.org"
+license="MIT"
+arch="aarch64"
+options="!check !archcheck"
+depends="
+	linux-xiaomi-sirius
+	mkbootimg
+	postmarketos-base
+"
+makedepends="devicepkg-dev"
+source="deviceinfo"
+
+build() {
+	devicepkg_build $startdir $pkgname
+}
+
+package() {
+	devicepkg_package $startdir $pkgname
+}
+
+sha512sums="
+b57bec1ef1be233c82ffd56f1a87f591a0a52298b5cfd802cae1a23764cd95e683c784bd4c1c1b6c65d40e9922b7e7b4e445f46e57cf26b17e5538cd8cffa9d3  deviceinfo
+"

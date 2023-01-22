@@ -1,0 +1,11 @@
+--- a/arch/arm64/Makefile	2022-02-26 19:04:57.000000000 +0800
++++ b/arch/arm64/Makefile	2023-01-22 15:24:42.222379137 +0800
+@@ -18,7 +18,7 @@
+ # Pass --no-apply-dynamic-relocs to restore pre-binutils-2.27 behaviour
+ # for relative relocs, since this leads to better Image compression
+ # with the relocation offsets always being zero.
+-LDFLAGS_vmlinux		+= -pie -shared -Bsymbolic \
++LDFLAGS_vmlinux		+= -pie -shared -Bsymbolic -z notext --no-warn-rwx-segments \
+ 			$(call ld-option, --no-apply-dynamic-relocs)
+ endif
+ 
